@@ -1,0 +1,3 @@
+[submodule "library/--branch"]
+	path = library/--branch
+	url = git@github.com:michaelbecker/freertos-addons.git
