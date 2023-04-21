@@ -1,3 +1,6 @@
 [submodule "library/--branch"]
 	path = library/--branch
 	url = git@github.com:michaelbecker/freertos-addons.git
+[submodule "source/Middlewares/Third_Party/freertos-addons"]
+	path = source/Middlewares/Third_Party/freertos-addons
+	url = git@github.com:michaelbecker/freertos-addons.git

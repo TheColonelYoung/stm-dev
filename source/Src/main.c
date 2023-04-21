@@ -19,7 +19,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "workqueue.h"
+#include "thread.hpp"
+
+#include <string>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

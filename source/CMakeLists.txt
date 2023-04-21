@@ -16,6 +16,7 @@ set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_C_COMPILER_WORKS 1)
 set(CMAKE_C_COMPILER arm-none-eabi-gcc)
+set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_COMPILER arm-none-eabi-g++)
 set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
 set(CMAKE_OBJCOPY arm-none-eabi-objcopy)
@@ -34,24 +35,25 @@ set(MCU_FLAGS "-mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction
 
 set(CMAKE_C_FLAGS "${MCU_FLAGS}")
 set(CMAKE_CXX_FLAGS "${MCU_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics")
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,-gc-sections -T ${LINKER_SCRIPT} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--print-memory-usage -Wl,--no-wchar-size-warning")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,-gc-sections -T ${LINKER_SCRIPT} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--print-memory-usage -Wl,--no-wchar-size-warning -Wl,--no-warn-rwx-segment")
 #  -Wl,--no-warn-rwx-segment
-add_definitions(-D__weak=__attribute__\(\(weak\)\) -D__packed=__attribute__\(\(__packed__\)\) -DUSE_HAL_DRIVER -DSTM32L432xx -DSTM32_L4 -DUSE_HAL_DRIVER)
+add_definitions(-D__weak=__attribute__\(\(weak\)\) -D__packed=__attribute__\(\(__packed__\)\) -DUSE_HAL_DRIVER -DSTM32L432xx -DSTM32_L4 -DUSE_HAL_DRIVER -DCPP_FREERTOS_NO_EXCEPTIONS)
 
-file(GLOB_RECURSE SOURCES "Drivers/*.*" "Src/*.*" "Inc/*.*" "Middlewares/*.*")
+file(GLOB_RECURSE SOURCES "Drivers/*.*" "Src/*.*" "Inc/*.*" "Middlewares/Third_Party/FreeRTOS/*.*" "Middlewares/Third_Party/freertos-addons/c/Source/*.*" "Middlewares/Third_Party/freertos-addons/c++/Source/*.*")
+#)
 
 include_directories(Inc
     Drivers/${SERIES}xx_HAL_Driver/Inc
     Drivers/${SERIES}xx_HAL_Driver/Inc/Legacy
     Drivers/CMSIS/Device/ST/${SERIES}xx/Include
-    Drivers/CMSIS/Include Inc
+    Drivers/CMSIS/Include
     Middlewares/Third_Party/FreeRTOS/Source/include
     Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
-    Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F )
+    Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+    Middlewares/Third_Party/freertos-addons/c/Source/include
+    Middlewares/Third_Party/freertos-addons/c++/Source/include)
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT} ${STARTUP_SCRIPT})
-link_libraries(LINK_PUBLIC freertos-addons)
-
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)
 
