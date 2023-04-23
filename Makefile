@@ -1,4 +1,4 @@
-.PHONY: tests run_test
+.PHONY: firmware tests run_test
 
 IMAGE_NAME := stm-dev
 TOOLCHAIN_SCRIPT=stm-toolchain
@@ -12,7 +12,7 @@ CONTAINER_RUN := docker run --rm --privileged -t -v /dev:/dev -v $(PWD):/project
 ROOT_RUN := $(CONTAINER_RUN) $(IMAGE_NAME) /bin/sh -c
 USER_RUN := $(CONTAINER_RUN) --user "$(USER_ID):$(GROUP_ID)" $(IMAGE_NAME) /bin/sh -c
 
-all: binary test run_test
+all: firmware test run_test
 
 init: docker-build
 	cat <<EOF > ${TOOLCHAIN_SCRIPT} \
@@ -45,14 +45,14 @@ docker-openocd:
 docker-gdb:
 	$(ROOT_RUN) "gdb-multiarch -ex \"target remote localhost:3333\""
 
-binary: $(BUILD_DIR)
-	$(USER_RUN) "cd $(BUILD_DIR) && cmake .. -DCMAKE_BUILD_TYPE=Debug && make binary -j$(nproc)"
+firmware: $(BUILD_DIR)
+	$(USER_RUN) "cd $(BUILD_DIR) && cmake .. -DCMAKE_BUILD_TYPE=Debug && make firmware -j$(nproc)"
 
 $(BUILD_DIR):
 	mkdir build/
 
 run_test: $(BUILD_DIR) tests
-	-$(USER_RUN) "./build/test/utest"
+	-$(USER_RUN) "./build/test/test"
 
 coverage: run_test
 	$(USER_RUN) "cd build/test/CMakeFiles/utest.dir/project/source/ && gcov *.gcno"
@@ -61,14 +61,14 @@ report_coverage: coverage
 	$(USER_RUN) " lcov -q -c --directory build/test/CMakeFiles/utest.dir/project/source/ --output-file coverage.info"
 	$(USER_RUN) "genhtml -q -o output-directory coverage.info"
 
-tests: $(BUILD_DIR)
-	$(USER_RUN) "cd $(BUILD_DIR) && cmake .. -DCMAKE_BUILD_TYPE=Debug && make utest -j$(nproc)"
+test: $(BUILD_DIR)
+	$(USER_RUN) "cd $(BUILD_DIR) && cmake .. -DCMAKE_BUILD_TYPE=Debug && make test -j$(nproc)"
 
 clean:
 	rm -rf build
 
-flash: binary
-	openocd -f interface/stlink.cfg -f target/stm32l4x.cfg -c "program build/source/stm-dev.bin verify reset exit 0x08000000"
+flash: firmware
+	openocd -f interface/stlink.cfg -f target/stm32l4x.cfg -c "program build/firmware.bin verify reset exit 0x08000000"
 
 reset:
 	openocd -f interface/stlink.cfg -f target/stm32l4x.cfg -c init -c "reset halt"
