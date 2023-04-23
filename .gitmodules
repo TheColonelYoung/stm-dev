@@ -4,3 +4,6 @@
 [submodule "source/Middlewares/Third_Party/freertos-addons"]
 	path = source/Middlewares/Third_Party/freertos-addons
 	url = git@github.com:michaelbecker/freertos-addons.git
+[submodule "library/tracelyzer"]
+	path = library/tracelyzer
+	url = git@github.com:percepio/TraceRecorderSource.git
