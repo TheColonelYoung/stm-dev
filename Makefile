@@ -1,4 +1,5 @@
 .PHONY: firmware tests run_test
+.SILENT:
 
 IMAGE_NAME := stm-dev
 TOOLCHAIN_SCRIPT=stm-toolchain
@@ -46,23 +47,31 @@ docker-gdb:
 	$(ROOT_RUN) "gdb-multiarch -ex \"target remote localhost:3333\""
 
 firmware: $(BUILD_DIR)
-	$(USER_RUN) "cd $(BUILD_DIR) && cmake .. -DCMAKE_BUILD_TYPE=Debug && make firmware -j$(nproc)"
+	$(USER_RUN) "cd $(BUILD_DIR) && cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 && make firmware -j$(nproc)"
+	@$(MAKE) modify_clangd
+
+modify_clangd:
+	@sed -i 's#/project#$(shell pwd)#g' ./build/compile_commands.json
 
 $(BUILD_DIR):
 	mkdir build/
 
-run_test: $(BUILD_DIR) tests
+run_test: $(BUILD_DIR) test
 	-$(USER_RUN) "./build/test/test"
 
-coverage: run_test
-	$(USER_RUN) "cd build/test/CMakeFiles/utest.dir/project/source/ && gcov *.gcno"
+test_coverage: run_test
+	$(USER_RUN) "cd build/test/CMakeFiles/test.dir/__/source && gcov **/*.gcno"
 
-report_coverage: coverage
-	$(USER_RUN) " lcov -q -c --directory build/test/CMakeFiles/utest.dir/project/source/ --output-file coverage.info"
-	$(USER_RUN) "genhtml -q -o output-directory coverage.info"
+report_coverage: test_coverage
+	$(USER_RUN) " lcov -q -c --directory build/test/CMakeFiles/test.dir/__/source/ --output-file build/coverage.info"
+	$(USER_RUN) "genhtml -q -o build/coverage_report build/coverage.info"
+
+coverage: report_coverage
+	@xdg-open build/coverage_report/index.html 1>/dev/null 2>/dev/null &
 
 test: $(BUILD_DIR)
 	$(USER_RUN) "cd $(BUILD_DIR) && cmake .. -DCMAKE_BUILD_TYPE=Debug && make test -j$(nproc)"
+	@$(MAKE) modify_clangd
 
 clean:
 	rm -rf build
