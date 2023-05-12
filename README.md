@@ -1,5 +1,5 @@
-# stm-dev
-Development setup for STM32 contaning FreeRTOS, TinyUSB and UnitTesting(Catch2 + FakeIt + gcov) mostly in docker container
+# stm-dev  
+Development setup for STM32 contaning FreeRTOS, TinyUSB and UnitTesting(Catch2 + FakeIt + gcov) mostly in docker container  
 
 # Folder structure  
 - `source/` - source files for application with `main.cpp`  
@@ -22,13 +22,13 @@ There are two main environments for compiling due their difference are separated
 - firmware - for STM32 binary compilation  
 - test - for Unit test compilation  
 
-## Configuration
+## Configuration  
 
-#### MCU series
+#### MCU series  
 MCU settings should be set in root `CMakeLists.txt`.  
     This contains series and long and short ID of MCU.  
 
-#### Tracelyzer
+#### Tracelyzer  
 
 # Unit testing  
 Test files are linked to source files by prefix `"test_" + source_file_name + ".cpp"`  
@@ -46,131 +46,131 @@ Unit test are not integrated but probably could be by usage of C++ [Test Mate](h
   
 Configuration of extension  
 ```json  
-"testMate.cpp.test.advancedExecutables": [
-    {
-        "pattern": "build/test/test",
-        "executionWrapper": {
-            "path": "/bin/sh",
-            "args": [ "-c", "${workspaceFolder}/run_test.sh \"${cmd}\" ${argsStr} 2>&1" ]
-        },
-        "cwd": "${workspaceFolder}",
-        "sourceFileMap": {
-            "/project": "${workspaceFolder}"
-        }
-    }
-],
+"testMate.cpp.test.advancedExecutables": [  
+    {  
+        "pattern": "build/test/test",  
+        "executionWrapper": {  
+            "path": "/bin/sh",  
+            "args": [ "-c", "${workspaceFolder}/run_test.sh \"${cmd}\" ${argsStr} 2>&1" ]  
+        },  
+        "cwd": "${workspaceFolder}",  
+        "sourceFileMap": {  
+            "/project": "${workspaceFolder}"  
+        }  
+    }  
+],  
 ```  
 
-# Coverage
+# Coverage  
 Coverage is handled by `gcov` which is installed inside docker.  
     Based on tests `gcov` creates report which lines are covered by tests.  
     Test binary needs to be compiled with flags `-fprofile-arcs -ftest-coverage`.  
 HTML coverage report can be created by makefile target `report_coverage`.   
 
-# Clangd
-Use `compile_commands.json` located in `build/` file for creating cache which is used by Codium to navigate and suggest code.
-    File is created by adding `-DCMAKE_EXPORT_COMPILE_COMMANDS=1` flag to CMake.
-Because compilation is done in container paths in `compile_commands.json` does not match. This could be fixed by using `--path-mappings` argument.
-    But there will still be problem with Codium navigation.
-Problem could be solved by modifying `compile_commands.json` content by using `sed` utility after file is created.
-    This has to be done after every update of file (compilation).
+# Clangd  
+Use `compile_commands.json` located in `build/` file for creating cache which is used by Codium to navigate and suggest code.  
+    File is created by adding `-DCMAKE_EXPORT_COMPILE_COMMANDS=1` flag to CMake.  
+Because compilation is done in container paths in `compile_commands.json` does not match. This could be fixed by using `--path-mappings` argument.  
+    But there will still be problem with Codium navigation.  
+Problem could be solved by modifying `compile_commands.json` content by using `sed` utility after file is created.  
+    This has to be done after every update of file (compilation).  
 
-```Makefile
-firmware: $(BUILD_DIR)
-	...
-	@$(MAKE) modify_clangd
+```Makefile  
+firmware: $(BUILD_DIR)  
+	...  
+	@$(MAKE) modify_clangd  
 
-modify_clangd:
-	@sed -i 's#/project#$(shell pwd)#g' ./build/compile_commands.json
-```
+modify_clangd:  
+	@sed -i 's#/project#$(shell pwd)#g' ./build/compile_commands.json  
+```  
 
-Clangd is not able to work with some ARM related compilation flags.
-These flags can be removed for clangd compilation by using `.clangd` config file.
-```yaml
-CompileFlags:
-  Remove:
-  - "-mthumb-interwork"
-```
+Clangd is not able to work with some ARM related compilation flags.  
+These flags can be removed for clangd compilation by using `.clangd` config file.  
+```yaml  
+CompileFlags:  
+  Remove:  
+  - "-mthumb-interwork"  
+```  
 
 # Debugging  
 Is done via VSCode cortex-debug extension can can be done by any other mean.  
 Content of launch.json for cortex debug configuration  
 Debugging is done outside of container due to unresolved issues with connection to cortex-debug.  
-Because during compilation symbols are referenced to file position in container path substitution is required on order to properly step through files in VSCode.
+Because during compilation symbols are referenced to file position in container path substitution is required on order to properly step through files in VSCode.  
 
 ```json  
-{
-    "version": "0.2.0",
-    "configurations": [
+{  
+    "version": "0.2.0",  
+    "configurations": [  
 
-        {
-            "type": "cortex-debug",
-            "request": "launch",
-            "servertype": "openocd",
-            "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build/source/firmware.elf",
-            "name": "GDB + OpenOCD",
-            "device": "STM32L432xx",
-            "configFiles": [
-                "interface/stlink.cfg",
-                "target/stm32l4x.cfg"
-            ],
-            "preLaunchCommands": [
-                "set substitute-path /project ${workspaceRoot}",
-            ],
-        }
-    ]
-}
+        {  
+            "type": "cortex-debug",  
+            "request": "launch",  
+            "servertype": "openocd",  
+            "cwd": "${workspaceRoot}",  
+            "executable": "${workspaceRoot}/build/source/firmware.elf",  
+            "name": "GDB + OpenOCD",  
+            "device": "STM32L432xx",  
+            "configFiles": [  
+                "interface/stlink.cfg",  
+                "target/stm32l4x.cfg"  
+            ],  
+            "preLaunchCommands": [  
+                "set substitute-path /project ${workspaceRoot}",  
+            ],  
+        }  
+    ]  
+}  
 ```  
 
-# Additional libraries
+# Additional libraries  
 
-## FreeRTOS
-Is configured by CubeMX located in source/Middlewares/Third_Party/FreeRTOS
+## FreeRTOS  
+Is configured by CubeMX located in source/Middlewares/Third_Party/FreeRTOS  
 
-## Tracealyzer
-Following code has to be in end of `FreeRTOSConfig.h`
-```cpp
-#ifdef USE_TRACEALYZER
-  #if ( configUSE_TRACE_FACILITY == 1 )
-    #include "trcRecorder.h"
-  #endif
-#endif
-```
+## Tracealyzer  
+Following code has to be in end of `FreeRTOSConfig.h`  
+```cpp  
+#ifdef USE_TRACEALYZER  
+  #if ( configUSE_TRACE_FACILITY == 1 )  
+    #include "trcRecorder.h"  
+  #endif  
+#endif  
+```  
 
-Stream port is set by CMake variable `TRACEALYZER_STREAM_PORT`
-Options:
- - `STM32_USB_CDC`
+Stream port is set by CMake variable `TRACEALYZER_STREAM_PORT`  
+Options:  
+ - `STM32_USB_CDC`  
 
-Enable stream by adding following before `osKernelStart()`:
-```cpp
-vTraceEnable(TRC_START);
-```
-Alternatively `vTraceEnable(TRC_START_AWAIT_HOST);` could be used of host port supports Receive operation.
+Enable stream by adding following before `osKernelStart()`:  
+```cpp  
+vTraceEnable(TRC_START);  
+```  
+Alternatively `vTraceEnable(TRC_START_AWAIT_HOST);` could be used of host port supports Receive operation.  
 
-#### Configuration
-In `config/trcConfig.h` set:
-```cpp
-#include "stm32l4xx.h"
-...
-#define TRC_CFG_HARDWARE_PORT TRC_HARDWARE_PORT_ARM_Cortex_M
-```
+#### Configuration  
+In `config/trcConfig.h` set:  
+```cpp  
+  
+...  
+#define TRC_CFG_HARDWARE_PORT TRC_HARDWARE_PORT_ARM_Cortex_M  
+```  
 
-In `kernelports/FreeRTOS/config/trcKernelPortConfig.h` set:
-```cpp
-#define TRC_CFG_RECORDER_MODE TRC_RECORDER_MODE_STREAMING
-...
-#define TRC_CFG_FREERTOS_VERSION TRC_FREERTOS_VERSION_10_3_1
-```
+In `kernelports/FreeRTOS/config/trcKernelPortConfig.h` set:  
+```cpp  
+#define TRC_CFG_RECORDER_MODE TRC_RECORDER_MODE_STREAMING  
+...  
+#define TRC_CFG_FREERTOS_VERSION TRC_FREERTOS_VERSION_10_3_1  
+```  
 
-In `streamports/STM32_USB_CDC/trcStreamPort.c` change USB interface include to:
-```cpp
-#include <usbd_cdc_if.h>
-```
+In `streamports/STM32_USB_CDC/trcStreamPort.c` change USB interface include to:  
+```cpp  
+#include <usbd_cdc_if.h>  
+```  
 
-#### Stream port implementation
+#### Stream port implementation  
 
-## freertos-addons
+## freertos-addons  
 
 # Makefile  
 Main targets:  
@@ -184,7 +184,7 @@ Main targets:
 
 There are another targets are these are currently used for debugging or testing of system  
 
-# TODO
-- [ ] - Debugging thought container, openocd in container, cortex-debug attached into debug serve
-- [ ] - Test integration into VSCode
-- [ ] - TinyUSB support
+# TODO  
+- [ ] - Debugging thought container, openocd in container, cortex-debug attached into debug serve  
+- [ ] - Test integration into VSCode  
+- [ ] - TinyUSB support  
