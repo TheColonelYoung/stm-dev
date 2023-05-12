@@ -19,12 +19,14 @@ Main components of Docker container are
 
 # Compiling  
 There are two main environments for compiling due their difference are separated.  
-- firmware - for RP2040 binary compilation  
+- firmware - for STM32 binary compilation  
 - test - for Unit test compilation  
 
 ## Configuration
 
 #### MCU series
+MCU settings should be set in root `CMakeLists.txt`.  
+    This contains series and long and short ID of MCU.  
 
 #### Tracelyzer
 
@@ -39,22 +41,56 @@ Building is not integrated is run by Makefile targets
 Unit test are not integrated but probably could be by usage of C++ [Test Mate](https://github.com/matepek/vscode-catch2-test-adapter)  
   - There is problem with running test in docker because test binary cannot be execute on host  
   - Using "wrapper" is not working, stuck on `discovering tests`  
+    - As wrapper script which executed make target executing tests in container is used  
   - Source files will have to be mapped to host machine similar to GDB  
-  - Configuration of extension  
+  
+Configuration of extension  
 ```json  
-"testMate.cpp.test.advancedExecutables": [  
-        {  
-            "pattern": "build/test/utest",  
-            "executionWrapper": {  
-                "path": "/bin/sh",  
-                "args": [ "-c", "${workspaceFolder}/run_test.sh \"${cmd}\" ${argsStr} 2>&1" ]  
-            },  
-            "sourceFileMap": {  
-                "/project": "${workspaceFolder}"  
-            }  
-        }  
-    ],  
+"testMate.cpp.test.advancedExecutables": [
+    {
+        "pattern": "build/test/test",
+        "executionWrapper": {
+            "path": "/bin/sh",
+            "args": [ "-c", "${workspaceFolder}/run_test.sh \"${cmd}\" ${argsStr} 2>&1" ]
+        },
+        "cwd": "${workspaceFolder}",
+        "sourceFileMap": {
+            "/project": "${workspaceFolder}"
+        }
+    }
+],
 ```  
+
+# Coverage
+Coverage is handled by `gcov` which is installed inside docker.  
+    Based on tests `gcov` creates report which lines are covered by tests.  
+    Test binary needs to be compiled with flags `-fprofile-arcs -ftest-coverage`.  
+HTML coverage report can be created by makefile target `report_coverage`.   
+
+# Clangd
+Use `compile_commands.json` located in `build/` file for creating cache which is used by Codium to navigate and suggest code.
+    File is created by adding `-DCMAKE_EXPORT_COMPILE_COMMANDS=1` flag to CMake.
+Because compilation is done in container paths in `compile_commands.json` does not match. This could be fixed by using `--path-mappings` argument.
+    But there will still be problem with Codium navigation.
+Problem could be solved by modifying `compile_commands.json` content by using `sed` utility after file is created.
+    This has to be done after every update of file (compilation).
+
+```Makefile
+firmware: $(BUILD_DIR)
+	...
+	@$(MAKE) modify_clangd
+
+modify_clangd:
+	@sed -i 's#/project#$(shell pwd)#g' ./build/compile_commands.json
+```
+
+Clangd is not able to work with some ARM related compilation flags.
+These flags can be removed for clangd compilation by using `.clangd` config file.
+```yaml
+CompileFlags:
+  Remove:
+  - "-mthumb-interwork"
+```
 
 # Debugging  
 Is done via VSCode cortex-debug extension can can be done by any other mean.  
@@ -90,6 +126,7 @@ Because during compilation symbols are referenced to file position in container 
 # Additional libraries
 
 ## FreeRTOS
+Is configured by CubeMX located in source/Middlewares/Third_Party/FreeRTOS
 
 ## Tracealyzer
 Following code has to be in end of `FreeRTOSConfig.h`
@@ -137,14 +174,12 @@ In `streamports/STM32_USB_CDC/trcStreamPort.c` change USB interface include to:
 
 # Makefile  
 Main targets:  
-`docker-build` - build container requiren for most of other targets  
-`binary` - Compile binary for RP2040  
-`flash` - Flash binary into RP2040 connected via SWD (RPi Debug Probe)  
-`picotool`-flash - Use picotool to flash binary into device via USB connection  
+`docker-build` - build container required for most of other targets  
+`firmware` - Compile binary for STM32  
+`flash` - Flash binary into STM32 connected via SWD  
 `tests` - Compile unit tests  
 `run_test` - Run unit tests  
-`coverage` - Create coverage report for unit tests  
-`report_coverage` - Create HTML coverage report by lcov  
+`coverage` - Creates nad opens coverage report for unit tests  
 `clean` - Remove build folder  
 
 There are another targets are these are currently used for debugging or testing of system  
@@ -152,6 +187,4 @@ There are another targets are these are currently used for debugging or testing 
 # TODO
 - [ ] - Debugging thought container, openocd in container, cortex-debug attached into debug serve
 - [ ] - Test integration into VSCode
-- [ ] - Coverage report integration into VSCode (line coverage + report viewer)
-- [ ] - Change location of coverage report output folder
 - [ ] - TinyUSB support

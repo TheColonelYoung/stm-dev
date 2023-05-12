@@ -28,7 +28,6 @@ file(GLOB TEST_SOURCES CONFIGURE_DEPENDS
 set(SOURCES_UNDER_TEST)
 foreach(file ${TEST_SOURCES})
     string(REPLACE "test/test_" "source/App/" new_file "${file}")
-    message("Filename without prefix: ${new_file}")
 
     # Add the modified filename to the new list
     list(APPEND SOURCES_UNDER_TEST ${new_file})
