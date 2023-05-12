@@ -32,12 +32,14 @@ target_include_directories(tracealyzer PUBLIC
     ../source/Middlewares/Third_Party/FreeRTOS/Source/include
     ../source/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
     ../source/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
-    ../source/Inc
+    ../source/Core/Inc
 )
 
 if (TRACEALYZER_STREAM_PORT STREQUAL "STM32_USB_CDC")
     target_include_directories(tracealyzer PUBLIC
         ../source/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc # USB
         ../source/Middlewares/ST/STM32_USB_Device_Library/Core/Inc # USB
+        ../source/USB_DEVICE/App # USB
+        ../source/USB_DEVICE/Target # USB
     )
 endif()
