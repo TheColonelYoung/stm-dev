@@ -1,0 +1,15 @@
+[submodule "library/tracealyzer"]
+	path = library/tracealyzer
+	url = git@github.com:percepio/TraceRecorderSource.git
+[submodule "library/freertos-addons"]
+	path = library/freertos-addons
+	url = git@github.com:michaelbecker/freertos-addons.git
+[submodule "library/emio"]
+	path = library/emio
+	url = git@github.com:Viatorus/emio.git
+[submodule "library/tinyusb"]
+	path = library/tinyusb
+	url = git@github.com:hathach/tinyusb.git
+[submodule "library/etl"]
+	path = library/etl
+	url = git@github.com:ETLCPP/etl.git
