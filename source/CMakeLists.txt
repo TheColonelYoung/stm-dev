@@ -40,8 +40,8 @@ add_compile_definitions(${TARGET} PUBLIC
 
 file(GLOB_RECURSE BIN_SOURCES
     "Drivers/*.*"
-    "Src/*.*"
-    "Inc/*.*"
+    "Core/*.*"
+    "USB_DEVICE/*.*"
     "App/*.*"
     "Middlewares/Third_Party/FreeRTOS/*.*"
     "Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/*.*" # USB
@@ -52,9 +52,12 @@ add_executable(${TARGET} ${BIN_SOURCES} ${LINKER_SCRIPT} ${STARTUP_SCRIPT} )
 
 target_link_libraries(${TARGET} PUBLIC tracealyzer)
 target_link_libraries(${TARGET} PUBLIC freertos-addons)
+target_link_libraries(${TARGET} PUBLIC emio)
 
 target_include_directories(${TARGET} PUBLIC
-    Inc
+    Core/Inc
+    USB_DEVICE/App
+    USB_DEVICE/Target
     Drivers/${MCU_SERIES}xx_HAL_Driver/Inc
     Drivers/${MCU_SERIES}xx_HAL_Driver/Inc/Legacy
     Drivers/CMSIS/Device/ST/${MCU_SERIES}xx/Include
@@ -66,7 +69,7 @@ target_include_directories(${TARGET} PUBLIC
     Middlewares/ST/STM32_USB_Device_Library/Core/Inc # USB
 )
 
-set_source_files_properties(Src/main.c PROPERTIES LANGUAGE CXX )
+set_source_files_properties(Core/Src/main.c PROPERTIES LANGUAGE CXX )
 
 set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${OUTPUT_ELF})
 
