@@ -54,6 +54,16 @@
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+unsigned int stats_timer;
 
+void configureTimerForRunTimeStats(void)
+{
+  return 0;
+}
+
+unsigned long getRunTimeCounterValue(void)
+{
+  return HAL_GetTick();
+}
 /* USER CODE END Application */
 

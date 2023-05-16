@@ -24,11 +24,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "emio.hpp"
+#include "main.hpp"
+
+#include "thread.hpp"
 
 #include "usbd_cdc_if.h"
 
-#include <string>
+
+#include "thread_example.hpp"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,14 +58,12 @@ const osThreadAttr_t defaultTask_attributes = {
     .stack_size = 256 * 4,
     .priority   = (osPriority_t) osPriorityNormal,
 };
-
+/* USER CODE BEGIN PV */
 const osThreadAttr_t LEDTask_attributes = {
     .name       = "LEDTask",
     .stack_size = 256 * 4,
     .priority   = (osPriority_t) osPriorityNormal,
 };
-/* USER CODE BEGIN PV */
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -77,6 +78,23 @@ void LEDTask(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void vAssertCalled(unsigned long ulLine, const char *const pcFileName){
+    printf("ASSERT: %s : %d\n", pcFileName, (int) ulLine);
+    while (1);
+}
+
+unsigned long ulGetRunTimeCounterValue(void){
+    return 0;
+}
+
+void vConfigureTimerForRunTimeStats(void){
+    return;
+}
+
+extern "C" void vApplicationMallocFailedHook(void);
+void vApplicationMallocFailedHook(void){
+    while (1);
+}
 
 /* USER CODE END 0 */
 
@@ -110,14 +128,22 @@ int main(void){
     MX_USART2_UART_Init();
     /* USER CODE BEGIN 2 */
 
-    std::string str = emio::format("The answer is {}.", 42);
-    HAL_UART_Transmit(&huart2, (uint8_t *) str.c_str(), str.length(), 10);
+    // std::string str = emio::format("The answer is {}.\r\n", 42);
+    // HAL_UART_Transmit(&huart2, (uint8_t *) str.c_str(), str.length(), 10);
 
-    vTraceEnable(TRC_START);
+    // etl::vector<int, 3> etl_vector;
+    // etl_vector.push_back(3);
+
+    // std::string etl_element = emio::format("Vector values at [0] is {}.\r\n", etl_vector[0]);
+
+    // HAL_UART_Transmit(&huart2, (uint8_t *) etl_element.c_str(), etl_element.length(), 10);
+
+
+    //vTraceEnable(TRC_START);
     /* USER CODE END 2 */
 
     /* Init scheduler */
-    osKernelInitialize();
+    //osKernelInitialize();
 
     /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
@@ -137,11 +163,14 @@ int main(void){
 
     /* Create the thread(s) */
     /* creation of defaultTask */
-    defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+    //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
     /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
     osThreadNew(LEDTask, NULL, &LEDTask_attributes);
+    Example_thread thread1("Thr_1", 1, 1000);
+
+
     /* USER CODE END RTOS_THREADS */
 
     /* USER CODE BEGIN RTOS_EVENTS */
@@ -150,11 +179,12 @@ int main(void){
     /* USER CODE END RTOS_EVENTS */
 
     /* Start scheduler */
-    osKernelStart();
+    //osKernelStart();
 
     /* We should never get here as control is now taken by the scheduler */
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+    cpp_freertos::Thread::StartScheduler();
     while (1) {
         /* USER CODE END WHILE */
 
@@ -303,7 +333,7 @@ void StartDefaultTask(void *argument){
     /* Infinite loop */
     for (;;) {
         osDelay(1);
-        //std::string str = emio::format(".");
+        // std::string str = emio::format(".");
         // CDC_Transmit_FS((uint8_t *)str.c_str(), str.length());
     }
     /* USER CODE END 5 */

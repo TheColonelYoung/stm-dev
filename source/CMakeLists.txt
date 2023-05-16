@@ -12,19 +12,17 @@ string(TOLOWER ${MCU_SHORT_ID} STARTUP_ID)
 set(STARTUP_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/startup_${STARTUP_ID}xx.s)
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/${MCU_LONG_ID}_FLASH.ld)
 
-#Uncomment for hardware floating point
-set(FPU_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
-
-#Uncomment for software floating point
-#set(FPU_FLAGS "-mfloat-abi=soft")
-
-set(COMMON_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wformat=2 -Wformat-truncation")
+if (MCU_FPU_TYPE STREQUAL "HARD")
+    set(FPU_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
+else()
+    set(FPU_FLAGS "-mfloat-abi=soft")
+endif()
 
 set(MCU_FLAGS "-mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0 -specs=nosys.specs -specs=nano.specs -u _printf_float")
 
 set(CMAKE_C_FLAGS "${COMMON_FLAGS} ${MCU_FLAGS}")
 set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} ${MCU_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics -Wvolatile")
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,-gc-sections -T ${LINKER_SCRIPT} -Wl,-Map=${PROJECT_BINARY_DIR}/${TARGET}.map -Wl,--print-memory-usage -Wl,--no-wchar-size-warning -Wl,--no-warn-rwx-segment")
+set(CMAKE_EXE_LINKER_FLAGS "-mthumb -Wl,-gc-sections -T ${LINKER_SCRIPT} -Wl,-Map=${PROJECT_BINARY_DIR}/${TARGET}.map -Wl,--print-memory-usage -Wl,--no-wchar-size-warning -Wl,--no-warn-rwx-segment")
 
 
 add_compile_definitions(${TARGET} PUBLIC
@@ -39,22 +37,53 @@ add_compile_definitions(${TARGET} PUBLIC
 )
 
 file(GLOB_RECURSE BIN_SOURCES
-    "Drivers/*.*"
-    "Core/*.*"
-    "USB_DEVICE/*.*"
+    "Core/Src/*.*"
+    "Core/Inc/*.*"
     "App/*.*"
-    "Middlewares/Third_Party/FreeRTOS/*.*"
-    "Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/*.*" # USB
-    "Middlewares/ST/STM32_USB_Device_Library/Core/Src/*.*" # USB
 )
 
-add_executable(${TARGET} ${BIN_SOURCES} ${LINKER_SCRIPT} ${STARTUP_SCRIPT} )
+file(GLOB_RECURSE FREERTOS_SOURCES
+"Middlewares/Third_Party/FreeRTOS/*.*"
+)
+
+file(GLOB_RECURSE USB_SOURCES
+    "USB_DEVICE/*.*"
+    "Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/*.*"
+    "Middlewares/ST/STM32_USB_Device_Library/Core/Src/*.*"
+)
+
+file(GLOB_RECURSE HAL_SOURCES
+    "Drivers/*.*"
+)
+
+# Suppress warnings in generated HAL sources
+SET_SOURCE_FILES_PROPERTIES(
+    ${HAL_SOURCES}
+    ${USB_SOURCES}
+    PROPERTIES
+    COMPILE_FLAGS "-Wno-unused-parameter"
+)
+
+# Suppress warnings in generated main.c source file
+SET_SOURCE_FILES_PROPERTIES(
+    Core/Src/main.c
+    PROPERTIES
+    COMPILE_FLAGS "-Wno-volatile -Wno-unused-parameter -Wno-missing-field-initializers"
+)
+
+add_executable( ${TARGET}
+    ${BIN_SOURCES} ${HAL_SOURCES} ${USB_SOURCES} ${FREERTOS_SOURCES}
+    ${LINKER_SCRIPT}
+    ${STARTUP_SCRIPT}
+)
 
 target_link_libraries(${TARGET} PUBLIC tracealyzer)
 target_link_libraries(${TARGET} PUBLIC freertos-addons)
 target_link_libraries(${TARGET} PUBLIC emio)
+target_link_libraries(${TARGET} PUBLIC etl)
 
 target_include_directories(${TARGET} PUBLIC
+    App
     Core/Inc
     USB_DEVICE/App
     USB_DEVICE/Target

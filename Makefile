@@ -5,8 +5,8 @@ IMAGE_NAME := stm-dev
 TOOLCHAIN_SCRIPT=stm-toolchain
 
 PWD = $(shell pwd)
-USER_ID = $(shell id -u)
-GROUP_ID = $(shell id -g)
+USER_ID = 1000#$(shell id -u)
+GROUP_ID = 1000#$(shell id -g)
 BUILD_DIR = build
 
 CONTAINER_RUN := docker run --rm --privileged -t -v /dev:/dev -v $(PWD):/project
