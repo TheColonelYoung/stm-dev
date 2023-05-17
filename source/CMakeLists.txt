@@ -28,12 +28,11 @@ set(CMAKE_EXE_LINKER_FLAGS "-mthumb -Wl,-gc-sections -T ${LINKER_SCRIPT} -Wl,-Ma
 add_compile_definitions(${TARGET} PUBLIC
     __weak=__attribute__\(\(weak\)\)
     __packed=__attribute__\(\(__packed__\)\)
-    USE_HAL_DRIVER
     ${MCU_SHORT_ID}xx
     ${MCU_SERIES}
     USE_HAL_DRIVER
     CPP_FREERTOS_NO_EXCEPTIONS
-    USE_TRACEALYZER
+    #USE_TRACEALYZER
 )
 
 file(GLOB_RECURSE BIN_SOURCES
@@ -77,10 +76,11 @@ add_executable( ${TARGET}
     ${STARTUP_SCRIPT}
 )
 
-target_link_libraries(${TARGET} PUBLIC tracealyzer)
-target_link_libraries(${TARGET} PUBLIC freertos-addons)
+# target_link_libraries(${TARGET} PUBLIC tracealyzer)
+# target_link_libraries(${TARGET} PUBLIC freertos-addons)
 target_link_libraries(${TARGET} PUBLIC emio)
 target_link_libraries(${TARGET} PUBLIC etl)
+target_link_libraries(${TARGET} PUBLIC tinyusb)
 
 target_include_directories(${TARGET} PUBLIC
     App
