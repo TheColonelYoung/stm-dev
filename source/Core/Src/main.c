@@ -113,6 +113,11 @@ int main(void)
 
 
     // vTraceEnable(TRC_START);
+
+    for (int i = 0; i < 100; i++) {
+        tud_task();
+        HAL_Delay(20);
+    }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -122,6 +127,11 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
         tud_task();
+        if ( tud_cdc_available() ){
+            char buf[4] = "1\r\n";
+            tud_cdc_write(buf, 3);
+            tud_cdc_write_flush();
+        }
         HAL_Delay(15);
         HAL_GPIO_WritePin(GPIOB, LED1_Pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(GPIOB, LED2_Pin, GPIO_PIN_SET);
