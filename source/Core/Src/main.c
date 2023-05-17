@@ -55,11 +55,9 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
     .name       = "defaultTask",
-    .stack_size = 512 * 4,
-    .priority   = (osPriority_t) osPriorityHigh,
+    .stack_size = 256 * 4,
+    .priority   = (osPriority_t) osPriorityNormal,
 };
-
-
 /* USER CODE BEGIN PV */
 const osThreadAttr_t LEDTask_attributes = {
     .name       = "LEDTask",
@@ -72,7 +70,7 @@ const osThreadAttr_t LEDTask_attributes = {
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-
+static void MX_USB_OTG_FS_PCD_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -98,6 +96,7 @@ extern "C" void vApplicationMallocFailedHook(void);
 void vApplicationMallocFailedHook(void){
     while (1);
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -128,7 +127,7 @@ int main(void){
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_USART2_UART_Init();
-
+    //MX_USB_OTG_FS_PCD_Init();
     /* USER CODE BEGIN 2 */
 
     // std::string str = emio::format("The answer is {}.\r\n", 42);
@@ -167,10 +166,10 @@ int main(void){
 
     /* Create the thread(s) */
     /* creation of defaultTask */
-    //osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+    //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
     /* USER CODE BEGIN RTOS_THREADS */
-    //osThreadNew(LEDTask, NULL, &LEDTask_attributes);
+    // osThreadNew(LEDTask, NULL, &LEDTask_attributes);
     Example_thread thread1("Example_thread", 0, 1);
     LED_heartbeat_thread thread2("LED_thread", 1, 20);
     TinyUSB_thread thread3("USB_thread", 2, 10);
@@ -190,6 +189,7 @@ int main(void){
     /* USER CODE BEGIN WHILE */
     while (1) {
         /* USER CODE END WHILE */
+
         /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
