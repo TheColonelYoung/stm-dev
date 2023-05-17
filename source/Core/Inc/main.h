@@ -64,6 +64,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 void SystemClock_Config(void);
+static void MX_USB_OTG_FS_PCD_Init(void);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

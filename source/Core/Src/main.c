@@ -72,7 +72,7 @@ const osThreadAttr_t LEDTask_attributes = {
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_USB_OTG_FS_PCD_Init(void);
+
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -128,11 +128,9 @@ int main(void){
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_USART2_UART_Init();
-    MX_USB_OTG_FS_PCD_Init();
+
     /* USER CODE BEGIN 2 */
-    HAL_PWREx_EnableVddUSB();
-    HAL_Delay(1);
-    tud_init(BOARD_TUD_RHPORT);
+
     // std::string str = emio::format("The answer is {}.\r\n", 42);
     // HAL_UART_Transmit(&huart2, (uint8_t *) str.c_str(), str.length(), 10);
 
@@ -149,7 +147,7 @@ int main(void){
     /* USER CODE END 2 */
 
     /* Init scheduler */
-    osKernelInitialize();
+    //osKernelInitialize();
 
     /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
@@ -169,23 +167,23 @@ int main(void){
 
     /* Create the thread(s) */
     /* creation of defaultTask */
-    osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+    //osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
     /* USER CODE BEGIN RTOS_THREADS */
-    osThreadNew(LEDTask, NULL, &LEDTask_attributes);
-    //Example_thread thread1("Example_thread", 0, 1);
-    //LED_heartbeat_thread thread2("LED_thread", 1, 20);
-    //TinyUSB_thread thread3("USB_thread", 2, 10);
+    //osThreadNew(LEDTask, NULL, &LEDTask_attributes);
+    Example_thread thread1("Example_thread", 0, 1);
+    LED_heartbeat_thread thread2("LED_thread", 1, 20);
+    TinyUSB_thread thread3("USB_thread", 2, 10);
     /* add threads, ... */
     /* USER CODE END RTOS_THREADS */
 
     /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-    //cpp_freertos::Thread::StartScheduler();
+    cpp_freertos::Thread::StartScheduler();
     /* USER CODE END RTOS_EVENTS */
 
     /* Start scheduler */
-    osKernelStart();
+    //osKernelStart();
 
     /* We should never get here as control is now taken by the scheduler */
     /* Infinite loop */
