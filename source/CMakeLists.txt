@@ -77,7 +77,7 @@ add_executable( ${TARGET}
 )
 
 # target_link_libraries(${TARGET} PUBLIC tracealyzer)
-# target_link_libraries(${TARGET} PUBLIC freertos-addons)
+target_link_libraries(${TARGET} PUBLIC freertos-addons)
 target_link_libraries(${TARGET} PUBLIC emio)
 target_link_libraries(${TARGET} PUBLIC etl)
 target_link_libraries(${TARGET} PUBLIC tinyusb)

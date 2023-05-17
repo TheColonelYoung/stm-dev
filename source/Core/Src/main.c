@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -26,6 +27,10 @@
 
 #include "tusb.h"
 
+#include "thread.hpp"
+#include "thread_example.hpp"
+#include "LED_heartbeat_thread.hpp"
+#include "tinyusb_thread.hpp"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,8 +51,21 @@ UART_HandleTypeDef huart2;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
-/* USER CODE BEGIN PV */
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+    .name       = "defaultTask",
+    .stack_size = 512 * 4,
+    .priority   = (osPriority_t) osPriorityHigh,
+};
 
+
+/* USER CODE BEGIN PV */
+const osThreadAttr_t LEDTask_attributes = {
+    .name       = "LEDTask",
+    .stack_size = 256 * 4,
+    .priority   = (osPriority_t) osPriorityNormal,
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -55,13 +73,31 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
+void StartDefaultTask(void *argument);
+
 /* USER CODE BEGIN PFP */
 void LEDTask(void *argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void vAssertCalled(unsigned long ulLine, const char *const pcFileName){
+    printf("ASSERT: %s : %d\n", pcFileName, (int) ulLine);
+    while (1);
+}
 
+unsigned long ulGetRunTimeCounterValue(void){
+    return 0;
+}
+
+void vConfigureTimerForRunTimeStats(void){
+    return;
+}
+
+extern "C" void vApplicationMallocFailedHook(void);
+void vApplicationMallocFailedHook(void){
+    while (1);
+}
 /* USER CODE END 0 */
 
 /**
@@ -94,10 +130,9 @@ int main(void){
     MX_USART2_UART_Init();
     MX_USB_OTG_FS_PCD_Init();
     /* USER CODE BEGIN 2 */
-
     HAL_PWREx_EnableVddUSB();
+    HAL_Delay(1);
     tud_init(BOARD_TUD_RHPORT);
-
     // std::string str = emio::format("The answer is {}.\r\n", 42);
     // HAL_UART_Transmit(&huart2, (uint8_t *) str.c_str(), str.length(), 10);
 
@@ -111,30 +146,53 @@ int main(void){
 
     // vTraceEnable(TRC_START);
 
-    for (int i = 0; i < 100; i++) {
-        tud_task();
-        HAL_Delay(20);
-    }
     /* USER CODE END 2 */
 
+    /* Init scheduler */
+    osKernelInitialize();
+
+    /* USER CODE BEGIN RTOS_MUTEX */
+    /* add mutexes, ... */
+    /* USER CODE END RTOS_MUTEX */
+
+    /* USER CODE BEGIN RTOS_SEMAPHORES */
+    /* add semaphores, ... */
+    /* USER CODE END RTOS_SEMAPHORES */
+
+    /* USER CODE BEGIN RTOS_TIMERS */
+    /* start timers, add new ones, ... */
+    /* USER CODE END RTOS_TIMERS */
+
+    /* USER CODE BEGIN RTOS_QUEUES */
+    /* add queues, ... */
+    /* USER CODE END RTOS_QUEUES */
+
+    /* Create the thread(s) */
+    /* creation of defaultTask */
+    osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+    /* USER CODE BEGIN RTOS_THREADS */
+    osThreadNew(LEDTask, NULL, &LEDTask_attributes);
+    //Example_thread thread1("Example_thread", 0, 1);
+    //LED_heartbeat_thread thread2("LED_thread", 1, 20);
+    //TinyUSB_thread thread3("USB_thread", 2, 10);
+    /* add threads, ... */
+    /* USER CODE END RTOS_THREADS */
+
+    /* USER CODE BEGIN RTOS_EVENTS */
+    /* add events, ... */
+    //cpp_freertos::Thread::StartScheduler();
+    /* USER CODE END RTOS_EVENTS */
+
+    /* Start scheduler */
+    osKernelStart();
+
+    /* We should never get here as control is now taken by the scheduler */
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1) {
         /* USER CODE END WHILE */
-
         /* USER CODE BEGIN 3 */
-        tud_task();
-        if (tud_cdc_available() ) {
-            char buf[4] = "1\r\n";
-            tud_cdc_write(buf, 3);
-            tud_cdc_write_flush();
-        }
-        HAL_Delay(15);
-        HAL_GPIO_WritePin(GPIOB, LED1_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(GPIOB, LED2_Pin, GPIO_PIN_SET);
-        HAL_Delay(15);
-        HAL_GPIO_WritePin(GPIOB, LED1_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(GPIOB, LED2_Pin, GPIO_PIN_RESET);
     }
     /* USER CODE END 3 */
 } // main
@@ -286,16 +344,39 @@ static void MX_GPIO_Init(void){
 /* USER CODE BEGIN 4 */
 void LEDTask(void *argument){
     for (;;) {
-        // osDelay(20);
+        osDelay(20);
         HAL_GPIO_WritePin(GPIOB, LED1_Pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(GPIOB, LED2_Pin, GPIO_PIN_SET);
-        // osDelay(20);
+        osDelay(20);
         HAL_GPIO_WritePin(GPIOB, LED1_Pin, GPIO_PIN_SET);
         HAL_GPIO_WritePin(GPIOB, LED2_Pin, GPIO_PIN_RESET);
     }
 }
 
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument){
+    /* USER CODE BEGIN 5 */
+    /* Infinite loop */
+    for (;;) {
+        tud_task();
+        if (tud_cdc_available() ) {
+            char buf[4] = "1\r\n";
+            tud_cdc_write(buf, 3);
+            tud_cdc_write_flush();
+        }
+        osDelay(10);
+    }
+    /* USER CODE END 5 */
+}
 
 /**
   * @brief  Period elapsed callback in non blocking mode
