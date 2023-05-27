@@ -29,7 +29,6 @@
 #include "tusb.h"
 
 #include "thread.hpp"
-#include "thread_example.hpp"
 #include "LED_heartbeat_thread.hpp"
 #include "tinyusb_thread.hpp"
 /* USER CODE END Includes */
@@ -54,18 +53,7 @@ DMA_HandleTypeDef hdma_usart2_tx;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-    .name       = "defaultTask",
-    .stack_size = 256 * 4,
-    .priority   = (osPriority_t) osPriorityNormal,
-};
-/* USER CODE BEGIN PV */
-const osThreadAttr_t LEDTask_attributes = {
-    .name       = "LEDTask",
-    .stack_size = 256 * 4,
-    .priority   = (osPriority_t) osPriorityNormal,
-};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -144,7 +132,7 @@ int main(void){
     // HAL_UART_Transmit(&huart2, (uint8_t *) etl_element.c_str(), etl_element.length(), 10);
 
     //
-    xTraceInitialize();
+    //xTraceInitialize();
     // xTraceEnable(TRC_START);
 
     /* USER CODE END 2 */
@@ -175,8 +163,8 @@ int main(void){
     /* USER CODE BEGIN RTOS_THREADS */
     // osThreadNew(LEDTask, NULL, &LEDTask_attributes);
     // Example_thread thread1("Example_thread", 0, 1);
-    LED_heartbeat_thread thread2("LED_thread", 50);
     TinyUSB_thread thread3("USB_thread");
+    LED_heartbeat_thread thread2("LED_thread", 50);
     CLI_thread thread4("CLI_thread");
 
     /* add threads, ... */
@@ -265,7 +253,7 @@ void MX_USART2_UART_Init(void){
 
     /* USER CODE END USART2_Init 1 */
     huart2.Instance                    = USART2;
-    huart2.Init.BaudRate               = 7500000;
+    huart2.Init.BaudRate               = 115200;
     huart2.Init.WordLength             = UART_WORDLENGTH_8B;
     huart2.Init.StopBits               = UART_STOPBITS_1;
     huart2.Init.Parity                 = UART_PARITY_NONE;
@@ -373,28 +361,6 @@ void LEDTask(void *argument){
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartDefaultTask */
-
-/**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument){
-    /* USER CODE BEGIN 5 */
-    /* Infinite loop */
-    for (;;) {
-        tud_task();
-        if (tud_cdc_available() ) {
-            char buf[4] = "1\r\n";
-            tud_cdc_write(buf, 3);
-            tud_cdc_write_flush();
-        }
-        osDelay(10);
-    }
-    /* USER CODE END 5 */
-}
 
 /**
   * @brief  Period elapsed callback in non blocking mode

@@ -81,6 +81,7 @@ target_link_libraries(${TARGET} PUBLIC freertos-addons)
 target_link_libraries(${TARGET} PUBLIC emio)
 target_link_libraries(${TARGET} PUBLIC etl)
 target_link_libraries(${TARGET} PUBLIC tinyusb)
+target_link_libraries(${TARGET} PUBLIC embedded-cli)
 
 target_include_directories(${TARGET} PUBLIC
     App

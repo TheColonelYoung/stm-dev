@@ -17,7 +17,7 @@ class TinyUSB_thread : public cpp_freertos::Thread {
 public:
 
     TinyUSB_thread(std::string name)
-        : Thread(name, 1024, 20){
+        : Thread(name, 2048, 20){
         Start();
     };
 
@@ -31,7 +31,7 @@ protected:
 
         while (1) {
             tud_task();
-            osDelay(1);
+            osDelay(10);
         }
     }; // Run
 
