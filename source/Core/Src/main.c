@@ -48,6 +48,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_usart2_tx;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
@@ -69,8 +70,8 @@ const osThreadAttr_t LEDTask_attributes = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_USB_OTG_FS_PCD_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -126,8 +127,9 @@ int main(void){
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
+    MX_DMA_Init();
     MX_USART2_UART_Init();
-    //MX_USB_OTG_FS_PCD_Init();
+    // MX_USB_OTG_FS_PCD_Init();
     /* USER CODE BEGIN 2 */
 
     // std::string str = emio::format("The answer is {}.\r\n", 42);
@@ -140,13 +142,14 @@ int main(void){
 
     // HAL_UART_Transmit(&huart2, (uint8_t *) etl_element.c_str(), etl_element.length(), 10);
 
-
-    // vTraceEnable(TRC_START);
+    //
+    xTraceInitialize();
+    // xTraceEnable(TRC_START);
 
     /* USER CODE END 2 */
 
     /* Init scheduler */
-    //osKernelInitialize();
+    // osKernelInitialize();
 
     /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
@@ -166,13 +169,14 @@ int main(void){
 
     /* Create the thread(s) */
     /* creation of defaultTask */
-    //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+    // defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
     /* USER CODE BEGIN RTOS_THREADS */
     // osThreadNew(LEDTask, NULL, &LEDTask_attributes);
-    Example_thread thread1("Example_thread", 0, 1);
+    // Example_thread thread1("Example_thread", 0, 1);
     LED_heartbeat_thread thread2("LED_thread", 1, 20);
     TinyUSB_thread thread3("USB_thread", 2, 10);
+
     /* add threads, ... */
     /* USER CODE END RTOS_THREADS */
 
@@ -182,7 +186,7 @@ int main(void){
     /* USER CODE END RTOS_EVENTS */
 
     /* Start scheduler */
-    //osKernelStart();
+    // osKernelStart();
 
     /* We should never get here as control is now taken by the scheduler */
     /* Infinite loop */
@@ -193,7 +197,7 @@ int main(void){
         /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
-} // main
+}  // main
 
 /**
   * @brief System Clock Configuration
@@ -243,14 +247,14 @@ void SystemClock_Config(void){
     /** Enable MSI Auto calibration
     */
     HAL_RCCEx_EnableMSIPLLMode();
-} // SystemClock_Config
+}  // SystemClock_Config
 
 /**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void){
+void MX_USART2_UART_Init(void){
     /* USER CODE BEGIN USART2_Init 0 */
 
     /* USER CODE END USART2_Init 0 */
@@ -259,7 +263,7 @@ static void MX_USART2_UART_Init(void){
 
     /* USER CODE END USART2_Init 1 */
     huart2.Instance                    = USART2;
-    huart2.Init.BaudRate               = 115200;
+    huart2.Init.BaudRate               = 7500000;
     huart2.Init.WordLength             = UART_WORDLENGTH_8B;
     huart2.Init.StopBits               = UART_STOPBITS_1;
     huart2.Init.Parity                 = UART_PARITY_NONE;
@@ -284,14 +288,14 @@ static void MX_USART2_UART_Init(void){
     /* USER CODE BEGIN USART2_Init 2 */
 
     /* USER CODE END USART2_Init 2 */
-} // MX_USART2_UART_Init
+}  // MX_USART2_UART_Init
 
 /**
   * @brief USB_OTG_FS Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USB_OTG_FS_PCD_Init(void){
+void MX_USB_OTG_FS_PCD_Init(void){
     /* USER CODE BEGIN USB_OTG_FS_Init 0 */
 
     /* USER CODE END USB_OTG_FS_Init 0 */
@@ -314,6 +318,20 @@ static void MX_USB_OTG_FS_PCD_Init(void){
     /* USER CODE BEGIN USB_OTG_FS_Init 2 */
 
     /* USER CODE END USB_OTG_FS_Init 2 */
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void){
+    /* DMA controller clock enable */
+    __HAL_RCC_DMAMUX1_CLK_ENABLE();
+    __HAL_RCC_DMA1_CLK_ENABLE();
+
+    /* DMA interrupt init */
+    /* DMA1_Channel1_IRQn interrupt configuration */
+    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 }
 
 /**

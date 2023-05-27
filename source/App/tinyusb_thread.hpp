@@ -1,5 +1,6 @@
-# pragma once
+#pragma once
 
+#include "cdc_device.h"
 #include "cmsis_os2.h"
 #include "thread.hpp"
 #include "tusb.h"
@@ -13,36 +14,37 @@ extern UART_HandleTypeDef huart2;
 extern void MX_USB_OTG_FS_PCD_Init(void);
 
 class TinyUSB_thread : public cpp_freertos::Thread {
+public:
 
-    public:
+    TinyUSB_thread(std::string name, int i, int DelayInMiliSeconds)
+        : Thread(name, 1024, 5),
+        id(i),
+        DelayInMiliSeconds(DelayInMiliSeconds){
+        Start();
+    };
 
-        TinyUSB_thread(std::string name, int i, int DelayInMiliSeconds)
-           : Thread(name, 2048, 30),
-             id (i),
-             DelayInMiliSeconds(DelayInMiliSeconds)
-        {
+protected:
 
-            Start();
-        };
+    virtual void Run(){
+        MX_USB_OTG_FS_PCD_Init();
+        HAL_PWREx_EnableVddUSB();
+        tud_init(BOARD_TUD_RHPORT);
+        tud_task();
 
-    protected:
+        // Tracealyzer must be connected during following cycle
+        for (int i = 0; i < 500; i++) {
+            tud_task();
+            osDelay(10);
+        }
 
-        virtual void Run() {
-            MX_USB_OTG_FS_PCD_Init();
-            HAL_PWREx_EnableVddUSB();
-            tud_init(BOARD_TUD_RHPORT);
-            while(1) {
-                tud_task();
-                if (tud_cdc_available() ) {
-                    char buf[4] = "1\r\n";
-                    tud_cdc_write(buf, 3);
-                    tud_cdc_write_flush();
-                }
-                osDelay(20);
-            }
-        };
+        xTraceEnable(TRC_START);
 
-    private:
-        int id;
-        int DelayInMiliSeconds;
+        while (1) {
+            osDelay(1);
+        }
+    }; // Run
+
+private:
+    int id;
+    int DelayInMiliSeconds;
 };

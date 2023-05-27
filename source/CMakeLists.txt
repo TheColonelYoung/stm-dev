@@ -76,7 +76,7 @@ add_executable( ${TARGET}
     ${STARTUP_SCRIPT}
 )
 
-# target_link_libraries(${TARGET} PUBLIC tracealyzer)
+target_link_libraries(${TARGET} PUBLIC tracealyzer)
 target_link_libraries(${TARGET} PUBLIC freertos-addons)
 target_link_libraries(${TARGET} PUBLIC emio)
 target_link_libraries(${TARGET} PUBLIC etl)

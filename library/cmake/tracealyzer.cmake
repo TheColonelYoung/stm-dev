@@ -43,3 +43,14 @@ if (TRACEALYZER_STREAM_PORT STREQUAL "STM32_USB_CDC")
         ../source/USB_DEVICE/Target # USB
     )
 endif()
+
+if (TRACEALYZER_STREAM_PORT STREQUAL "STM32_TUSB")
+    target_include_directories(tracealyzer PUBLIC
+        tinyusb/src
+        tinyusb/src/common
+        tinyusb/src/device
+        tinyusb/src/host
+        tinyusb/src/osal
+        tinyusb/src/class/cdc
+    )
+endif()
