@@ -14,28 +14,27 @@ class LED_heartbeat_thread : public cpp_freertos::Thread {
 
     public:
 
-        LED_heartbeat_thread(std::string name, int i, int DelayInMiliSeconds)
-           : Thread(name, 500, 8),
-             id (i),
-             DelayInMiliSeconds(DelayInMiliSeconds)
+        LED_heartbeat_thread(std::string name, uint32_t delay)
+           : Thread(name, 1000, 8),
+             delay(delay)
         {
             Start();
         };
 
-    protected:
+    public:
+        uint32_t delay;
 
+    protected:
         virtual void Run() {
+            uint32_t delay_time = delay;
             while(true) {
-                osDelay(20);
+                vTaskDelay(delay_time);
                 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
                 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
-                osDelay(20);
+                vTaskDelay(delay_time);
                 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
                 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
             }
         };
 
-    private:
-        int id;
-        int DelayInMiliSeconds;
 };

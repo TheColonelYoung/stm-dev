@@ -16,10 +16,8 @@ extern void MX_USB_OTG_FS_PCD_Init(void);
 class TinyUSB_thread : public cpp_freertos::Thread {
 public:
 
-    TinyUSB_thread(std::string name, int i, int DelayInMiliSeconds)
-        : Thread(name, 1024, 5),
-        id(i),
-        DelayInMiliSeconds(DelayInMiliSeconds){
+    TinyUSB_thread(std::string name)
+        : Thread(name, 1024, 20){
         Start();
     };
 
@@ -31,20 +29,10 @@ protected:
         tud_init(BOARD_TUD_RHPORT);
         tud_task();
 
-        // Tracealyzer must be connected during following cycle
-        for (int i = 0; i < 500; i++) {
-            tud_task();
-            osDelay(10);
-        }
-
-        xTraceEnable(TRC_START);
-
         while (1) {
+            tud_task();
             osDelay(1);
         }
     }; // Run
 
-private:
-    int id;
-    int DelayInMiliSeconds;
 };

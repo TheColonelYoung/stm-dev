@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cli_thread.hpp"
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -174,8 +175,9 @@ int main(void){
     /* USER CODE BEGIN RTOS_THREADS */
     // osThreadNew(LEDTask, NULL, &LEDTask_attributes);
     // Example_thread thread1("Example_thread", 0, 1);
-    LED_heartbeat_thread thread2("LED_thread", 1, 20);
-    TinyUSB_thread thread3("USB_thread", 2, 10);
+    LED_heartbeat_thread thread2("LED_thread", 50);
+    TinyUSB_thread thread3("USB_thread");
+    CLI_thread thread4("CLI_thread");
 
     /* add threads, ... */
     /* USER CODE END RTOS_THREADS */
