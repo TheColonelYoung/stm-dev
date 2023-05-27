@@ -13,3 +13,6 @@
 [submodule "library/etl"]
 	path = library/etl
 	url = git@github.com:ETLCPP/etl.git
+[submodule "library/embedded-cli"]
+	path = library/embedded-cli
+	url = git@github.com:funbiscuit/embedded-cli.git
